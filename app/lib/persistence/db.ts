@@ -3,11 +3,11 @@ import { createScopedLogger } from '~/utils/logger';
 import type { ChatHistoryItem } from './useChatHistory';
 
 const logger = createScopedLogger('ChatHistory');
+const MESSAGES_PER_PAGE = 50; // Number of messages to load at a time
 
-// this is used at the top level and never rejects
 export async function openDatabase(): Promise<IDBDatabase | undefined> {
   return new Promise((resolve) => {
-    const request = indexedDB.open('boltHistory', 1);
+    const request = indexedDB.open('boltHistory', 2); // Increment version for schema update
 
     request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
       const db = (event.target as IDBOpenDBRequest).result;
@@ -16,6 +16,7 @@ export async function openDatabase(): Promise<IDBDatabase | undefined> {
         const store = db.createObjectStore('chats', { keyPath: 'id' });
         store.createIndex('id', 'id', { unique: true });
         store.createIndex('urlId', 'urlId', { unique: true });
+        store.createIndex('timestamp', 'timestamp', { unique: false });
       }
     };
 
@@ -30,13 +31,33 @@ export async function openDatabase(): Promise<IDBDatabase | undefined> {
   });
 }
 
-export async function getAll(db: IDBDatabase): Promise<ChatHistoryItem[]> {
+export async function getAll(db: IDBDatabase, page = 0): Promise<ChatHistoryItem[]> {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction('chats', 'readonly');
     const store = transaction.objectStore('chats');
-    const request = store.getAll();
+    const index = store.index('timestamp');
+    
+    // Use cursor to implement pagination
+    const request = index.openCursor(null, 'prev');
+    const items: ChatHistoryItem[] = [];
+    let skip = page * MESSAGES_PER_PAGE;
 
-    request.onsuccess = () => resolve(request.result as ChatHistoryItem[]);
+    request.onsuccess = (event) => {
+      const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
+      
+      if (cursor && items.length < MESSAGES_PER_PAGE) {
+        if (skip > 0) {
+          skip--;
+          cursor.continue();
+        } else {
+          items.push(cursor.value);
+          cursor.continue();
+        }
+      } else {
+        resolve(items);
+      }
+    };
+    
     request.onerror = () => reject(request.error);
   });
 }
@@ -100,6 +121,37 @@ export async function deleteById(db: IDBDatabase, id: string): Promise<void> {
 
     request.onsuccess = () => resolve(undefined);
     request.onerror = () => reject(request.error);
+  });
+}
+
+// Cleanup old chats to prevent database from growing too large
+export async function cleanupOldChats(db: IDBDatabase, maxChats = 100): Promise<void> {
+  const allChats = await getAll(db);
+  if (allChats.length <= maxChats) return;
+
+  const chatsToDelete = allChats.slice(maxChats);
+  const transaction = db.transaction('chats', 'readwrite');
+  const store = transaction.objectStore('chats');
+
+  return new Promise((resolve, reject) => {
+    let completed = 0;
+    let errors = 0;
+
+    chatsToDelete.forEach((chat) => {
+      const request = store.delete(chat.id);
+      request.onsuccess = () => {
+        completed++;
+        if (completed + errors === chatsToDelete.length) {
+          resolve();
+        }
+      };
+      request.onerror = () => {
+        errors++;
+        if (completed + errors === chatsToDelete.length) {
+          reject(new Error(`Failed to delete ${errors} chats`));
+        }
+      };
+    });
   });
 }
 
