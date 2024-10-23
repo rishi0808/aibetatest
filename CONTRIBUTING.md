@@ -1,6 +1,6 @@
 [![Bolt Open Source Codebase](./public/social_preview_index.jpg)](https://bolt.new)
 
-> Welcome to the **Bolt** open-source codebase! This repo contains a simple example app using the core components from bolt.new to help you get started building **AI-powered software development tools** powered by StackBlitz’s **WebContainer API**.
+> Welcome to the **Bolt** open-source codebase! This repo contains a simple example app using the core components from bolt.new to help you get started building **AI-powered software development tools** powered by rishi0808’s **WebContainer API**.
 
 ### Why Build with Bolt + WebContainer API
 
@@ -8,9 +8,9 @@ By building with the Bolt + WebContainer API you can create browser-based applic
 
 ### What’s the Difference Between Bolt (This Repo) and [Bolt.new](https://bolt.new)?
 
-- **Bolt.new**: This is the **commercial product** from StackBlitz—a hosted, browser-based AI development tool that enables users to prompt, run, edit, and deploy full-stack web applications directly in the browser. Built on top of the [Bolt open-source repo](https://github.com/stackblitz/bolt.new) and powered by the StackBlitz **WebContainer API**.
+- **Bolt.new**: This is the **commercial product** from rishi0808—a hosted, browser-based AI development tool that enables users to prompt, run, edit, and deploy full-stack web applications directly in the browser. Built on top of the [Bolt open-source repo](https://github.com/rishi0808/bolt.new) and powered by the rishi0808 **WebContainer API**.
 
-- **Bolt (This Repo)**: This open-source repository provides the core components used to make **Bolt.new**. This repo contains the UI interface for Bolt as well as the server components, built using [Remix Run](https://remix.run/). By leveraging this repo and StackBlitz’s **WebContainer API**, you can create your own AI-powered development tools and full-stack applications that run entirely in the browser.
+- **Bolt (This Repo)**: This open-source repository provides the core components used to make **Bolt.new**. This repo contains the UI interface for Bolt as well as the server components, built using [Remix Run](https://remix.run/). By leveraging this repo and rishi0808’s **WebContainer API**, you can create your own AI-powered development tools and full-stack applications that run entirely in the browser.
 
 # Get Started Building with Bolt
 
@@ -20,7 +20,7 @@ Bolt combines the capabilities of AI with sandboxed development environments to 
 
 Bolt uses [WebContainers](https://webcontainers.io/) to run generated code in the browser. WebContainers provide Bolt with a full-stack sandbox environment using [WebContainer API](https://webcontainers.io/api). WebContainers run full-stack applications directly in the browser without the cost and security concerns of cloud hosted AI agents. WebContainers are interactive and editable, and enables Bolt's AI to run code and understand any changes from the user.
 
-The [WebContainer API](https://webcontainers.io) is free for personal and open source usage. If you're building an application for commercial usage, you can learn more about our [WebContainer API commercial usage pricing here](https://stackblitz.com/pricing#webcontainer-api).
+The [WebContainer API](https://webcontainers.io) is free for personal and open source usage. If you're building an application for commercial usage, you can learn more about our [WebContainer API commercial usage pricing here](https://rishi0808.com/pricing#webcontainer-api).
 
 ### Remix App
 
@@ -33,7 +33,7 @@ deployed using [CloudFlare Pages](https://pages.cloudflare.com/) and
 Bolt uses the [AI SDK](https://github.com/vercel/ai) to integrate with AI
 models. At this time, Bolt supports using Anthropic's Claude Sonnet 3.5.
 You can get an API key from the [Anthropic API Console](https://console.anthropic.com/) to use with Bolt.
-Take a look at how [Bolt uses the AI SDK](https://github.com/stackblitz/bolt.new/tree/main/app/lib/.server/llm)
+Take a look at how [Bolt uses the AI SDK](https://github.com/rishi0808/bolt.new/tree/main/app/lib/.server/llm)
 
 ## Prerequisites
 
@@ -47,7 +47,7 @@ Before you begin, ensure you have the following installed:
 1. Clone the repository (if you haven't already):
 
 ```bash
-git clone https://github.com/stackblitz/bolt.new.git
+git clone https://github.com/rishi0808/bolt.new.git
 ```
 
 2. Install dependencies:
