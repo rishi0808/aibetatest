@@ -1,5 +1,5 @@
 import type { Message } from 'ai';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { StreamingMessageParser } from '~/lib/runtime/message-parser';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { createScopedLogger } from '~/utils/logger';
@@ -41,23 +41,40 @@ const messageParser = new StreamingMessageParser({
 
 export function useMessageParser() {
   const [parsedMessages, setParsedMessages] = useState<{ [key: number]: string }>({});
+  const processedMessageIds = useRef<Set<string>>(new Set());
+  const streamingContent = useRef<{ [key: string]: string }>({});
 
   const parseMessages = useCallback((messages: Message[], isLoading: boolean) => {
-    let reset = false;
-
-    if (import.meta.env.DEV && !isLoading) {
-      reset = true;
-      messageParser.reset();
-    }
-
     for (const [index, message] of messages.entries()) {
       if (message.role === 'assistant') {
-        const newParsedContent = messageParser.parse(message.id, message.content);
-
-        setParsedMessages((prevParsed) => ({
-          ...prevParsed,
-          [index]: !reset ? (prevParsed[index] || '') + newParsedContent : newParsedContent,
-        }));
+        if (isLoading) {
+          // For streaming messages, concatenate new content
+          const newParsedContent = messageParser.parse(message.id, message.content);
+          streamingContent.current[message.id] = (streamingContent.current[message.id] || '') + newParsedContent;
+          
+          setParsedMessages((prevParsed) => ({
+            ...prevParsed,
+            [index]: streamingContent.current[message.id],
+          }));
+        } else if (!processedMessageIds.current.has(message.id)) {
+          // For completed messages that haven't been processed
+          const newParsedContent = messageParser.parse(message.id, message.content);
+          processedMessageIds.current.add(message.id);
+          
+          // Store the complete parsed content
+          streamingContent.current[message.id] = newParsedContent;
+          
+          setParsedMessages((prevParsed) => ({
+            ...prevParsed,
+            [index]: newParsedContent,
+          }));
+        } else {
+          // For already processed messages, use the stored content
+          setParsedMessages((prevParsed) => ({
+            ...prevParsed,
+            [index]: streamingContent.current[message.id] || '',
+          }));
+        }
       }
     }
   }, []);

@@ -8,8 +8,10 @@ $code-font-size: 13px;
 }
 
 .MarkdownContent {
+  position: relative;
   line-height: 1.6;
   color: var(--bolt-elements-textPrimary);
+  z-index: 2; /* Ensure content is above backgrounds */
 
   > *:not(:last-child) {
     margin-block-end: 16px;
@@ -17,6 +19,8 @@ $code-font-size: 13px;
 
   :global(.artifact) {
     margin: 1.5em 0;
+    position: relative;
+    z-index: 2;
   }
 
   :is(h1, h2, h3, h4, h5, h6) {
@@ -26,18 +30,19 @@ $code-font-size: 13px;
       font-weight: 600;
       line-height: 1.25;
       color: var(--bolt-elements-textPrimary);
+      text-shadow: 0 0 10px rgba(0, 229, 255, 0.2); /* Subtle glow effect */
     }
   }
 
   h1 {
     font-size: 2em;
-    border-bottom: 1px solid var(--bolt-elements-borderColor);
+    border-bottom: 1px solid rgba(0, 229, 255, 0.2);
     padding-bottom: 0.3em;
   }
 
   h2 {
     font-size: 1.5em;
-    border-bottom: 1px solid var(--bolt-elements-borderColor);
+    border-bottom: 1px solid rgba(0, 229, 255, 0.2);
     padding-bottom: 0.3em;
   }
 
@@ -55,11 +60,13 @@ $code-font-size: 13px;
 
   h6 {
     font-size: 0.85em;
-    color: #6a737d;
+    color: var(--bolt-elements-textSecondary);
   }
 
   p {
     white-space: pre-wrap;
+    position: relative;
+    z-index: 2;
 
     &:not(:last-of-type) {
       margin-block-start: 0;
@@ -68,12 +75,31 @@ $code-font-size: 13px;
   }
 
   a {
-    color: var(--bolt-elements-messages-linkColor);
+    color: #00e5ff;
     text-decoration: none;
     cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
 
     &:hover {
-      text-decoration: underline;
+      text-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+      text-decoration: none;
+      
+      &::after {
+        transform: scaleX(1);
+      }
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: #00e5ff;
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
     }
   }
 
@@ -84,29 +110,74 @@ $code-font-size: 13px;
     @include not-inside-actions {
       border-radius: 6px;
       padding: 0.2em 0.4em;
-      background-color: var(--bolt-elements-messages-inlineCode-background);
-      color: var(--bolt-elements-messages-inlineCode-text);
+      background: rgba(0, 229, 255, 0.1);
+      color: #00e5ff;
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      text-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
     }
   }
 
   pre {
     padding: 20px 16px;
     border-radius: 6px;
+    position: relative;
+    background: rgba(10, 25, 47, 0.7);
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    box-shadow: 
+      inset 0 0 20px rgba(0, 229, 255, 0.05),
+      0 0 15px rgba(0, 229, 255, 0.1);
   }
 
   pre:has(> code) {
     font-family: $font-mono;
     font-size: $code-font-size;
-    background: transparent;
     overflow-x: auto;
     min-width: 0;
+
+    /* Custom scrollbar for code blocks */
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(0, 229, 255, 0.05);
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(0, 229, 255, 0.2);
+      border-radius: 4px;
+      
+      &:hover {
+        background: rgba(0, 229, 255, 0.3);
+      }
+    }
   }
 
   blockquote {
     margin: 0;
-    padding: 0 1em;
-    color: var(--bolt-elements-textTertiary);
-    border-left: 0.25em solid var(--bolt-elements-borderColor);
+    padding: 0.8em 1em;
+    color: var(--bolt-elements-textSecondary);
+    border-left: 3px solid #00e5ff;
+    background: rgba(0, 229, 255, 0.05);
+    border-radius: 0 4px 4px 0;
+    box-shadow: 
+      inset 0 0 20px rgba(0, 229, 255, 0.05),
+      0 0 15px rgba(0, 229, 255, 0.1);
+
+    /* Glowing border effect */
+    position: relative;
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -3px;
+      width: 3px;
+      height: 100%;
+      background: #00e5ff;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+    }
   }
 
   :is(ul, ol) {
@@ -114,18 +185,40 @@ $code-font-size: 13px;
       padding-left: 2em;
       margin-block-start: 0;
       margin-block-end: 16px;
+      position: relative;
+      z-index: 2;
     }
   }
 
   ul {
     @include not-inside-actions {
-      list-style-type: disc;
+      list-style-type: none;
+      
+      li {
+        position: relative;
+        
+        &::before {
+          content: '';
+          position: absolute;
+          left: -1.5em;
+          top: 0.7em;
+          width: 6px;
+          height: 6px;
+          background: #00e5ff;
+          border-radius: 50%;
+          box-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+        }
+      }
     }
   }
 
   ol {
     @include not-inside-actions {
       list-style-type: decimal;
+      
+      li::marker {
+        color: #00e5ff;
+      }
     }
   }
 
@@ -144,13 +237,21 @@ $code-font-size: 13px;
   img {
     max-width: 100%;
     box-sizing: border-box;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.1);
   }
 
   hr {
-    height: 0.25em;
+    height: 2px;
     padding: 0;
     margin: 24px 0;
-    background-color: var(--bolt-elements-borderColor);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(0, 229, 255, 0.5),
+      transparent
+    );
     border: 0;
   }
 
@@ -158,14 +259,27 @@ $code-font-size: 13px;
     border-collapse: collapse;
     width: 100%;
     margin-block-end: 16px;
+    background: rgba(10, 25, 47, 0.7);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    box-shadow: 
+      inset 0 0 20px rgba(0, 229, 255, 0.05),
+      0 0 15px rgba(0, 229, 255, 0.1);
 
     :is(th, td) {
-      padding: 6px 13px;
-      border: 1px solid #dfe2e5;
+      padding: 8px 16px;
+      border: 1px solid rgba(0, 229, 255, 0.1);
+    }
+
+    th {
+      background: rgba(0, 229, 255, 0.1);
+      color: #00e5ff;
+      font-weight: 600;
     }
 
     tr:nth-child(2n) {
-      background-color: #f6f8fa;
+      background: rgba(0, 229, 255, 0.05);
     }
   }
 }

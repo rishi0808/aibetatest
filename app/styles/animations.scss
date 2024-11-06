@@ -1,49 +1,223 @@
+/* Base Animation Settings */
 .animated {
   animation-fill-mode: both;
   animation-duration: var(--animate-duration, 0.2s);
-  animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 
   &.fadeInRight {
     animation-name: fadeInRight;
+    backdrop-filter: blur(4px);
   }
 
   &.fadeOutRight {
     animation-name: fadeOutRight;
+    backdrop-filter: blur(4px);
   }
 }
 
+/* Holographic Entry/Exit Animations */
 @keyframes fadeInRight {
   from {
     opacity: 0;
     transform: translate3d(100%, 0, 0);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0);
   }
 
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.1);
   }
 }
 
 @keyframes fadeOutRight {
   from {
     opacity: 1;
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.1);
   }
 
   to {
     opacity: 0;
     transform: translate3d(100%, 0, 0);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0);
   }
 }
 
+/* Enhanced Dropdown Animation */
 .dropdown-animation {
   opacity: 0;
-  animation: fadeMoveDown 0.15s forwards;
+  animation: holographicDropdown 0.2s forwards;
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
 }
 
-@keyframes fadeMoveDown {
-  to {
+@keyframes holographicDropdown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+    box-shadow: 0 0 0 rgba(0, 229, 255, 0);
+  }
+  100% {
     opacity: 1;
-    transform: translateY(6px);
+    transform: translateY(6px) scale(1);
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);
+  }
+}
+
+/* Tech Pulse Effect */
+.tech-pulse {
+  animation: techPulse 2s infinite;
+}
+
+@keyframes techPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 229, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 229, 255, 0);
+  }
+}
+
+/* Holographic Glow */
+.holo-glow {
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(0, 229, 255, 0.2),
+      transparent
+    );
+    animation: holoScan 3s infinite;
+  }
+}
+
+@keyframes holoScan {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 200%;
+  }
+}
+
+/* Interactive Element Highlight */
+.interactive-highlight {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.1);
+    transform: translateY(0);
+  }
+}
+
+/* Loading Scanner Effect */
+.scanner-line {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      #00e5ff,
+      transparent
+    );
+    animation: scannerMove 2s infinite;
+  }
+}
+
+@keyframes scannerMove {
+  0% {
+    top: 0;
+  }
+  50% {
+    top: 100%;
+  }
+  100% {
+    top: 0;
+  }
+}
+
+/* Startup Animation */
+.startup {
+  animation: startup 0.5s ease-out;
+}
+
+@keyframes startup {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+    filter: blur(10px);
+  }
+  50% {
+    filter: blur(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Terminal Cursor Effect */
+.terminal-cursor {
+  animation: terminalBlink 1s step-end infinite;
+}
+
+@keyframes terminalBlink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Error Glitch Effect */
+.error-glitch {
+  animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+}
+
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
   }
 }

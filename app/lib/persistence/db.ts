@@ -4,10 +4,29 @@ import type { ChatHistoryItem } from './useChatHistory';
 
 const logger = createScopedLogger('ChatHistory');
 
+async function getCurrentVersion(): Promise<number> {
+  return new Promise((resolve) => {
+    const request = indexedDB.open('boltHistory');
+    
+    request.onsuccess = (event: Event) => {
+      const db = (event.target as IDBOpenDBRequest).result;
+      const version = db.version;
+      db.close();
+      resolve(version);
+    };
+
+    request.onerror = () => {
+      resolve(1); // Default to version 1 if we can't read current version
+    };
+  });
+}
+
 // this is used at the top level and never rejects
 export async function openDatabase(): Promise<IDBDatabase | undefined> {
+  const currentVersion = await getCurrentVersion();
+  
   return new Promise((resolve) => {
-    const request = indexedDB.open('boltHistory', 1);
+    const request = indexedDB.open('boltHistory', currentVersion);
 
     request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
       const db = (event.target as IDBOpenDBRequest).result;
@@ -24,8 +43,24 @@ export async function openDatabase(): Promise<IDBDatabase | undefined> {
     };
 
     request.onerror = (event: Event) => {
-      resolve(undefined);
-      logger.error((event.target as IDBOpenDBRequest).error);
+      // If we get a version error, try incrementing the version
+      if (request.error?.name === 'VersionError') {
+        const retryRequest = indexedDB.open('boltHistory', currentVersion + 1);
+        
+        retryRequest.onupgradeneeded = request.onupgradeneeded;
+        
+        retryRequest.onsuccess = (event: Event) => {
+          resolve((event.target as IDBOpenDBRequest).result);
+        };
+        
+        retryRequest.onerror = (event: Event) => {
+          resolve(undefined);
+          logger.error((event.target as IDBOpenDBRequest).error);
+        };
+      } else {
+        resolve(undefined);
+        logger.error((event.target as IDBOpenDBRequest).error);
+      }
     };
   });
 }

@@ -1,9 +1,214 @@
-.actions .shiki {
-  background-color: var(--bolt-elements-actions-code-background) !important;
+/* Code Block Container */
+.code-block {
+  position: relative;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+
+  /* Holographic overlay */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(0, 229, 255, 0.5),
+      transparent
+    );
+    animation: scannerMove 2s infinite;
+    z-index: 1;
+  }
+
+  /* Tech pattern background */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.02;
+    background-image: 
+      linear-gradient(45deg, #00e5ff 25%, transparent 25%),
+      linear-gradient(-45deg, #00e5ff 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #00e5ff 75%),
+      linear-gradient(-45deg, transparent 75%, #00e5ff 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    pointer-events: none;
+  }
 }
 
+/* Syntax Highlighting Container */
 .shiki {
+  position: relative;
+  padding: 1rem;
+  font-family: 'Monaco', 'Consolas', monospace;
+  line-height: 1.5;
+  font-size: 0.9rem;
+  overflow-x: auto;
+  
+  /* Custom Scrollbar */
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 229, 255, 0.05);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 229, 255, 0.2);
+    border-radius: 4px;
+    
+    &:hover {
+      background: rgba(0, 229, 255, 0.3);
+    }
+  }
+
+  /* Actions Code Block */
+  &.actions {
+    background-color: var(--bolt-elements-actions-code-background) !important;
+    box-shadow: 
+      inset 0 0 20px rgba(0, 229, 255, 0.05),
+      0 0 15px rgba(0, 229, 255, 0.1);
+    border: 1px solid rgba(0, 229, 255, 0.1);
+  }
+
+  /* Messages Code Block */
   &:not(:has(.actions), .actions *) {
     background-color: var(--bolt-elements-messages-code-background) !important;
+    box-shadow: 
+      inset 0 0 20px rgba(0, 229, 255, 0.05),
+      0 0 15px rgba(0, 229, 255, 0.1);
+    border: 1px solid rgba(0, 229, 255, 0.1);
   }
+}
+
+/* Line Numbers */
+.line-numbers {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  padding: 1rem 0.5rem;
+  border-right: 1px solid rgba(0, 229, 255, 0.1);
+  background: rgba(0, 229, 255, 0.05);
+  color: rgba(0, 229, 255, 0.5);
+  user-select: none;
+}
+
+/* Inline Code */
+:not(pre) > code {
+  background: rgba(0, 229, 255, 0.1);
+  color: #00e5ff;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 0.9em;
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  box-shadow: 0 0 5px rgba(0, 229, 255, 0.1);
+}
+
+/* Syntax Highlighting Colors */
+.token {
+  &.comment {
+    color: #607B96;
+    font-style: italic;
+  }
+
+  &.string {
+    color: #7EE787;
+  }
+
+  &.number {
+    color: #79C0FF;
+  }
+
+  &.boolean {
+    color: #FF7B72;
+  }
+
+  &.keyword {
+    color: #FF79C6;
+    text-shadow: 0 0 2px rgba(255, 121, 198, 0.3);
+  }
+
+  &.function {
+    color: #00e5ff;
+    text-shadow: 0 0 2px rgba(0, 229, 255, 0.3);
+  }
+
+  &.operator {
+    color: #79C0FF;
+  }
+
+  &.punctuation {
+    color: #89DDFF;
+  }
+
+  &.class-name {
+    color: #FFE873;
+    text-shadow: 0 0 2px rgba(255, 232, 115, 0.3);
+  }
+
+  &.property {
+    color: #9CDCFE;
+  }
+
+  &.variable {
+    color: #BD93F9;
+  }
+}
+
+/* Code Block Header */
+.code-header {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 229, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 229, 255, 0.2);
+
+  .language-label {
+    color: #00e5ff;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .copy-button {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    color: #00e5ff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(0, 229, 255, 0.1);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Line Highlight */
+.highlighted-line {
+  background: rgba(0, 229, 255, 0.1);
+  border-left: 2px solid #00e5ff;
+  margin: 0 -1rem;
+  padding: 0 1rem;
+  display: block;
 }

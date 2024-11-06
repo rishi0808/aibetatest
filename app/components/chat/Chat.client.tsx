@@ -37,9 +37,6 @@ export function Chat() {
           );
         }}
         icon={({ type }) => {
-          /**
-           * @todo Handle more types if we need them. This may require extra color palettes.
-           */
           switch (type) {
             case 'success': {
               return <div className="i-ph:check-bold text-bolt-elements-icon-success text-2xl" />;
@@ -68,21 +65,41 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
   useShortcuts();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const animationCompleteRef = useRef(false);
+  const messageProcessingRef = useRef(false);
+  const initialMessagesProcessedRef = useRef(false);
+  const errorRecoveryRef = useRef(false);
 
-  const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
-
+  const [chatStarted, setChatStarted] = useState(false);
   const { showChat } = useStore(chatStore);
-
   const [animationScope, animate] = useAnimate();
 
-  const { messages, isLoading, input, handleInputChange, setInput, stop, append } = useChat({
+  const {
+    messages,
+    isLoading,
+    input,
+    handleInputChange,
+    setInput,
+    stop,
+    append,
+    reload,
+    setMessages
+  } = useChat({
     api: '/api/chat',
     onError: (error) => {
       logger.error('Request failed\n\n', error);
       toast.error('There was an error processing your request');
+      messageProcessingRef.current = false;
+      errorRecoveryRef.current = true;
+      
+      // Reset processing state after a short delay
+      setTimeout(() => {
+        errorRecoveryRef.current = false;
+      }, 1000);
     },
     onFinish: () => {
       logger.debug('Finished streaming');
+      messageProcessingRef.current = false;
     },
     initialMessages,
   });
@@ -92,21 +109,51 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
 
   const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
 
+  // Initialize chat state based on initialMessages
   useEffect(() => {
-    chatStore.setKey('started', initialMessages.length > 0);
-  }, []);
+    const hasMessages = initialMessages.length > 0;
+    
+    if (!initialMessagesProcessedRef.current) {
+      chatStore.setKey('started', hasMessages);
+      setChatStarted(hasMessages);
+      animationCompleteRef.current = hasMessages;
+      
+      if (hasMessages) {
+        setMessages(initialMessages);
+        parseMessages(initialMessages, false);
+      }
+      
+      initialMessagesProcessedRef.current = true;
+    }
+    
+    return () => {
+      stop();
+      chatStore.setKey('started', false);
+      chatStore.setKey('aborted', false);
+      animationCompleteRef.current = false;
+      messageProcessingRef.current = false;
+      initialMessagesProcessedRef.current = false;
+      errorRecoveryRef.current = false;
+    };
+  }, [initialMessages]);
 
   useEffect(() => {
-    parseMessages(messages, isLoading);
+    // Only parse and store new messages if not in error recovery
+    if (!errorRecoveryRef.current) {
+      parseMessages(messages, isLoading);
 
-    if (messages.length > initialMessages.length) {
-      storeMessageHistory(messages).catch((error) => toast.error(error.message));
+      // Only store messages if we're not in the initial loading state and have new messages
+      if (!messageProcessingRef.current && messages.length > initialMessages.length) {
+        storeMessageHistory(messages).catch((error) => {
+          console.error('Failed to store message history:', error);
+          toast.error('Failed to save chat history');
+        });
+      }
     }
   }, [messages, isLoading, parseMessages]);
 
   const scrollTextArea = () => {
     const textarea = textareaRef.current;
-
     if (textarea) {
       textarea.scrollTop = textarea.scrollHeight;
     }
@@ -116,84 +163,86 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
     stop();
     chatStore.setKey('aborted', true);
     workbenchStore.abortAllActions();
+    messageProcessingRef.current = false;
+    errorRecoveryRef.current = false;
   };
 
   useEffect(() => {
     const textarea = textareaRef.current;
-
     if (textarea) {
       textarea.style.height = 'auto';
-
       const scrollHeight = textarea.scrollHeight;
-
       textarea.style.height = `${Math.min(scrollHeight, TEXTAREA_MAX_HEIGHT)}px`;
       textarea.style.overflowY = scrollHeight > TEXTAREA_MAX_HEIGHT ? 'auto' : 'hidden';
     }
-  }, [input, textareaRef]);
+  }, [input, textareaRef, TEXTAREA_MAX_HEIGHT]);
 
   const runAnimation = async () => {
-    if (chatStarted) {
-      return;
+    if (chatStarted || animationCompleteRef.current) {
+      return true;
     }
 
-    await Promise.all([
-      animate('#examples', { opacity: 0, display: 'none' }, { duration: 0.1 }),
-      animate('#intro', { opacity: 0, flex: 1 }, { duration: 0.2, ease: cubicEasingFn }),
-    ]);
+    try {
+      await Promise.all([
+        animate('#examples', { opacity: 0, display: 'none' }, { duration: 0.1 }),
+        animate('#intro', { opacity: 0, flex: 1 }, { duration: 0.2, ease: cubicEasingFn }),
+      ]);
 
-    chatStore.setKey('started', true);
-
-    setChatStarted(true);
+      chatStore.setKey('started', true);
+      setChatStarted(true);
+      animationCompleteRef.current = true;
+      
+      // Small delay to ensure UI is ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      return true;
+    } catch (error) {
+      logger.error('Animation failed', error);
+      return false;
+    }
   };
 
   const sendMessage = async (_event: React.UIEvent, messageInput?: string) => {
     const _input = messageInput || input;
 
-    if (_input.length === 0 || isLoading) {
+    if (_input.length === 0 || isLoading || messageProcessingRef.current || errorRecoveryRef.current) {
       return;
     }
 
-    /**
-     * @note (delm) Usually saving files shouldn't take long but it may take longer if there
-     * many unsaved files. In that case we need to block user input and show an indicator
-     * of some kind so the user is aware that something is happening. But I consider the
-     * happy case to be no unsaved files and I would expect users to save their changes
-     * before they send another message.
-     */
-    await workbenchStore.saveAllFiles();
+    try {
+      messageProcessingRef.current = true;
 
-    const fileModifications = workbenchStore.getFileModifcations();
+      // Ensure animation is complete before proceeding
+      if (!animationCompleteRef.current) {
+        const success = await runAnimation();
+        if (!success) {
+          messageProcessingRef.current = false;
+          toast.error('Failed to initialize chat');
+          return;
+        }
+      }
 
-    chatStore.setKey('aborted', false);
+      await workbenchStore.saveAllFiles();
 
-    runAnimation();
+      const fileModifications = workbenchStore.getFileModifcations();
+      chatStore.setKey('aborted', false);
 
-    if (fileModifications !== undefined) {
-      const diff = fileModificationsToHTML(fileModifications);
+      if (fileModifications !== undefined) {
+        const diff = fileModificationsToHTML(fileModifications);
+        append({ role: 'user', content: `${diff}\n\n${_input}` });
+        workbenchStore.resetAllFileModifications();
+      } else {
+        append({ role: 'user', content: _input });
+      }
 
-      /**
-       * If we have file modifications we append a new user message manually since we have to prefix
-       * the user input with the file modifications and we don't want the new user input to appear
-       * in the prompt. Using `append` is almost the same as `handleSubmit` except that we have to
-       * manually reset the input and we'd have to manually pass in file attachments. However, those
-       * aren't relevant here.
-       */
-      append({ role: 'user', content: `${diff}\n\n${_input}` });
-
-      /**
-       * After sending a new message we reset all modifications since the model
-       * should now be aware of all the changes.
-       */
-      workbenchStore.resetAllFileModifications();
-    } else {
-      append({ role: 'user', content: _input });
+      setInput('');
+      resetEnhancer();
+      textareaRef.current?.blur();
+    } catch (error) {
+      logger.error('Failed to send message', error);
+      toast.error('Failed to send message');
+      messageProcessingRef.current = false;
     }
-
-    setInput('');
-
-    resetEnhancer();
-
-    textareaRef.current?.blur();
   };
 
   const [messageRef, scrollRef] = useSnapScroll();

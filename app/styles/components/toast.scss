@@ -1,17 +1,170 @@
+/* Base Toast Styles */
 .Toastify__toast {
   --at-apply: shadow-md;
-
+  position: relative;
   background-color: var(--bolt-elements-bg-depth-2);
   color: var(--bolt-elements-textPrimary);
-  border: 1px solid var(--bolt-elements-borderColor);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  backdrop-filter: blur(8px);
+  box-shadow: 
+    inset 0 0 20px rgba(0, 229, 255, 0.05),
+    0 0 15px rgba(0, 229, 255, 0.1);
+  
+  /* Holographic line effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(0, 229, 255, 0.5),
+      transparent
+    );
+    animation: scannerMove 2s infinite;
+  }
+
+  /* Tech pattern background */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.02;
+    background-image: 
+      linear-gradient(45deg, #00e5ff 25%, transparent 25%),
+      linear-gradient(-45deg, #00e5ff 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #00e5ff 75%),
+      linear-gradient(-45deg, transparent 75%, #00e5ff 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    pointer-events: none;
+    z-index: -1;
+  }
 }
 
+/* Success Toast */
+.Toastify__toast--success {
+  border-color: rgba(0, 230, 118, 0.2);
+  
+  &::before {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(0, 230, 118, 0.5),
+      transparent
+    );
+  }
+  
+  .Toastify__progress-bar {
+    background: linear-gradient(
+      to right,
+      rgba(0, 230, 118, 0.2),
+      rgba(0, 230, 118, 0.5)
+    );
+  }
+}
+
+/* Error Toast */
+.Toastify__toast--error {
+  border-color: rgba(255, 76, 76, 0.2);
+  
+  &::before {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 76, 76, 0.5),
+      transparent
+    );
+  }
+  
+  .Toastify__progress-bar {
+    background: linear-gradient(
+      to right,
+      rgba(255, 76, 76, 0.2),
+      rgba(255, 76, 76, 0.5)
+    );
+  }
+}
+
+/* Close Button */
 .Toastify__close-button {
   color: var(--bolt-elements-item-contentDefault);
   opacity: 1;
-  transition: none;
-
+  transition: all 0.2s ease;
+  padding: 0.5rem;
+  border-radius: 4px;
+  
   &:hover {
     color: var(--bolt-elements-item-contentActive);
+    background: rgba(0, 229, 255, 0.1);
+    transform: scale(1.1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Progress Bar */
+.Toastify__progress-bar {
+  background: linear-gradient(
+    to right,
+    rgba(0, 229, 255, 0.2),
+    rgba(0, 229, 255, 0.5)
+  );
+  height: 2px;
+}
+
+/* Toast Animations */
+@keyframes Toastify__trackProgress {
+  0% {
+    transform: scaleX(1);
+  }
+  100% {
+    transform: scaleX(0);
+  }
+}
+
+.Toastify__progress-bar--animated {
+  animation: Toastify__trackProgress linear 1;
+}
+
+/* Enter Animation */
+.Toastify__slide-enter--top-right {
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translate3d(100%, 0, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+/* Exit Animation */
+.Toastify__slide-exit--top-right {
+  animation: slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(100%, 0, 0);
+    opacity: 0;
   }
 }
